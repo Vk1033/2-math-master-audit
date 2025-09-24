@@ -3,6 +3,7 @@ pragma solidity ^0.8.3;
 
 import {Base_Test, console2} from "./Base_Test.t.sol";
 import {MathMasters} from "src/MathMasters.sol";
+import {CompactCodeBase} from "./CompactCodeBase.sol";
 
 contract MathMastersTest is Base_Test {
     function testMulWad() public {
@@ -42,6 +43,14 @@ contract MathMastersTest is Base_Test {
         // depending on whether you want to consider such an overflow case as passing or failing.
     }
 
+    function check_testMulWadUp(uint256 x, uint256 y) public pure {
+        if (x == 0 || y == 0 || y <= type(uint256).max / x) {
+            uint256 result = MathMasters.mulWadUp(x, y);
+            uint256 expected = x * y == 0 ? 0 : (x * y - 1) / 1e18 + 1;
+            assert(result == expected);
+        }
+    }
+
     function testSqrt() public {
         assertEq(MathMasters.sqrt(0), 0);
         assertEq(MathMasters.sqrt(1), 1);
@@ -57,5 +66,16 @@ contract MathMastersTest is Base_Test {
 
     function testSqrtFuzzSolmate(uint256 x) public pure {
         assert(MathMasters.sqrt(x) == solmateSqrt(x));
+    }
+
+    function testSqrtFuzzSolmateStripped(uint256 x) public {
+        CompactCodeBase cc = new CompactCodeBase();
+        assert(cc.mathMastersSqrtStripped(x) == cc.solmateSqrtStripped(x));
+    }
+
+    function testSqrtSolmateStripped() public {
+        uint256 x = 0xfffffe00000000;
+        CompactCodeBase cc = new CompactCodeBase();
+        assert(cc.mathMastersSqrtStripped(x) == cc.solmateSqrtStripped(x));
     }
 }
